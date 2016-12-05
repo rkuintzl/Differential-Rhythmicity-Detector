@@ -1,0 +1,22 @@
+# STEP 1:
+
+perl ~/Scripts/parseArser_get_LLCscores_basedOnZ-scores.pl ../metaout/namesAdded_young_dm6_genesARSresult_young_dm6_genes_ARS.R.txt ../metaout/namesAdded_old_dm6_genesARSresult_old_dm6_genes_ARS.R.txt
+
+# filter out miRNAs:
+perl ~/Scripts/filter_out_miRNAs.pl ~/data/Drosophila/Annotations/flybase_r6.06.gtf Arser_oldVsYoung_LLC_scores_basedOnZscores_medianFpkmCutoff1.txt 1 y
+
+
+
+# STEP 2:
+perl ~/Scripts/fitGaussian_DAH_script.pl -i Arser_oldVsYoung_LLC_scores_basedOnZscores_medianFpkmCutoff1_no_miRNAs.txt -b 0.1 -o LLCscores_binSize0.1 -c 11 -R &
+
+
+
+# STEP 3:
+
+perl ~/Scripts/parseArser_get_LLCscore_p-values_and_FDR.pl Arser_oldVsYoung_LLC_scores_basedOnZscores_medianFpkmCutoff1_no_miRNAs.txt .05 -0.0270973 0.926911538389721 .05 1.5
+
+# 'print everything' -- used for making LLC scatterplot:
+perl ~/Scripts/parseArser_get_LLCscore_p-values_and_FDR_printEverything.pl Arser_oldVsYoung_LLC_scores_basedOnZscores_medianFpkmCutoff1_no_miRNAs.txt .05 -0.0270973 0.926911538389721
+# Produces a file with suffix 'noFilter.txt'
+
