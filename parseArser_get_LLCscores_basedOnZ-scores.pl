@@ -1,4 +1,15 @@
 #!/usr/bin/perl -w
+
+# Created on [2015]
+#
+# Authors:
+# Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology
+# David A. Hendrix (David.Hendrix@oregonstate.edu), Oregon State University
+#
+# This script is one in a series of scripts for characterizing differential rhythmicity in
+# gene expression analysis as described in
+# Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
+
 use strict;
 use Scalar::Util qw(looks_like_number);
 use Statistics::Basic;
@@ -6,29 +17,26 @@ use Math::CDF;
 
 $|=1;
 
-# This script has been edited to compute LLC score by dividing by sqrt(2), not 2.
-
-# Restrictions: 
-#     Minimum MEDIAN expression value 1 FPKM in young OR old.
-#     Median subroutine exists now so you can filter on that instead of minFpkm.
+# Restrictions:
+#     MEDIAN expression value >= 1 FPKM in young OR old.
 #     Young and old p-values cannot both be 1--these genes are excluded.
-#     Each gene must have at least one non-zero value in young AND old. 
-#     --> Because the pseudo count is pretty low and that makes for some weird outliers on the scatterplot.
-#     --> So to avoid needing a pseudo-count when computing FC, I just require all genes to have > 0 expression.
-#     --> And I can't impose this requirement in young without imposing it in old also.
+#     Each gene must have at least one non-zero FPKM value in young AND old
+#     (to avoid using a pseudo-count when computing the fold change)
 
-# LLC score as computed by this script = (Zp + Zr)/2, where Zp is the periodicity difference z-score, and Zr is the robustness difference z-score.
-
-# StdDev and mean for Zp and Zr calculations are determined from basic equations, not fitting a Gaussian.
+# Differential rhythmicity score (S_DR) is defined as: (Zp + Zr)/2,
+# where Zp is the periodicity difference z-score, and Zr is the robustness difference z-score.
+# For more details, see our publication referenced above.
+#
+# Please use [./fitGaussian_DAH_script.pl -h] to see the help screen for further instructions on running this script.
 
 my $usage = "Usage:\n$0 <ARS Cycle young output> <ARS Cycle old output>\n";
 
-my $youngFile = $ARGV[0] or die $usage; 
+my $youngFile = $ARGV[0] or die $usage;
 my $oldFile = $ARGV[1] or die $usage;
 
 my $minFpkm = 1; # This is a cutoff for median expression.
 
-my $outFile = 'Arser_oldVsYoung_LLC_scores_basedOnZscores_medianFpkmCutoff' . $minFpkm . '.txt';
+my $outFile = 'Arser_oldVsYoung_SDR_scores_medianFpkmCutoff' . $minFpkm . '.txt';
 
 my($yVals,$oVals,$scores,$stats) = getRhythmInfo($youngFile,$oldFile);
 printRhythmInfo($yVals,$oVals,$scores,$stats);
@@ -45,11 +53,9 @@ sub getRhythmInfo {
     my $pseudoCount = nonZeroMin($expDiffs);
     my $expPsCount = nonZeroMin($expressions);
     print "Genes with zero expression in young or old across all time points:\n";
-    foreach my $id (keys %{$oVals}) { # Shouldn't matter which hash I use
+    foreach my $id (keys %{$oVals}) { 
 	my($yPval,$yAmp,$yExpDif,$yMin,$yMed,$yMax,$yRhythmScore,$yName) = @{$yVals->{$id}};
         my($oPval,$oAmp,$oExpDif,$oMin,$oMed,$oMax,$oRhythmScore,$oName) = @{$oVals->{$id}};
-#	$yExpDif = $yExpDif + $pseudoCount; # Shouldn't need the pseudo counts now
-#	$oExpDif = $oExpDif + $pseudoCount;
 	$yVals->{$id}->[2] = $yExpDif;
 	$oVals->{$id}->[2] = $oExpDif;
 	my $yFC = ($yMax + $expPsCount)/($yMin + $expPsCount);
@@ -68,7 +74,7 @@ sub getRhythmInfo {
 	    }
 	}
     }
-    # Compute stats. r = robustness (expDifs). p = periodicity (rhythmDifs).
+    # Compute stats. r = robustness (expression differences). p = periodicity differences.
     my $rMean = mean(\@logExpDifFCs);
     my $rStdDev = Statistics::Basic::stddev(\@logExpDifFCs);
     my $pMean = mean(\@rhythmDifs);
@@ -81,20 +87,20 @@ sub printRhythmInfo {
     my($yVals,$oVals,$scores,$stats) = @_;
     my($rMean,$rStdDev,$pMean,$pStdDev) = @{$stats};
     open(OUT,">$outFile") or die "Could not open $outFile for writing.\n";
-    print OUT "#Gene ID\tSymbol\tYoung Exp Max/Min\tOld Exp Max/Min\tARS Young p-val\tARS Old p-val\tZp (Periodicity Diff Z-score)\tYoung Exp Dif\tOld Exp Dif\tZr (Log2 Expression Diff FC Z-score)\tLLC Score\n";
-    foreach my $id (keys %{$oVals}) { # Shouldn't matter which hash I use        
+    print OUT "#Gene ID\tSymbol\tYoung Exp Max/Min\tOld Exp Max/Min\tARS Young p-val\tARS Old p-val\tZp (Periodicity Diff Z-score)\tYoung Exp Dif\tOld Exp Dif\tZr (Log2 Expression Diff FC Z-score)\tDR Score\n";
+    foreach my $id (keys %{$oVals}) { 
 	my($yPval,$yAmp,$yExpDif,$yMin,$yMed,$yMax,$yRhythmScore,$yName) = @{$yVals->{$id}};
         my($oPval,$oAmp,$oExpDif,$oMin,$oMed,$oMax,$oRhythmScore,$oName) = @{$oVals->{$id}};
 	unless($yPval == 1 && $oPval == 1) {
 	    if($yMed >= $minFpkm || $oMed >= $minFpkm) {
-		if($yMax > 0 && $oMax > 0) { # This requirement is imposed so I don't have to use a pseudo-count.
+		if($yMax > 0 && $oMax > 0) { # This requirement is imposed so that a pseudo-count is not required.
 		    my($rhythmDif,$logExpDifFC,$yExpFC,$oExpFC) = @{$scores->{$id}};
-		    # Compute Zr (z-score):
+		    # Compute Zr (robustness z-score):
 		    my $Zr = ($logExpDifFC - $rMean)/$rStdDev;
-		    # Compute Zc (z-score):
+		    # Compute Zp (periodicity z-score):
 		    my $Zp = ($rhythmDif - $pMean)/$pStdDev;
-		    my $LLCscore = ($Zr + $Zp) / sqrt(2);
-		    print OUT "$id\t$yName\t$yExpFC\t$oExpFC\t$yPval\t$oPval\t$Zp\t$yExpDif\t$oExpDif\t$Zr\t$LLCscore\n";
+		    my $DR_score = ($Zr + $Zp) / sqrt(2);
+		    print OUT "$id\t$yName\t$yExpFC\t$oExpFC\t$yPval\t$oPval\t$Zp\t$yExpDif\t$oExpDif\t$Zr\t$DR_score\n";
 		}
 	    }
 	}
@@ -113,11 +119,11 @@ sub readFile {
 	    my @expressions = @terms[14..25];
 	    push(@{$expVals},@expressions);
 	    my($name,$id,$filterType,$arMethod,$periodNumber,$period,$amplitude,$phase,$mean,$Rsquared,$adjustedRsquared,$coefVar,$pValue,$qValue) = split(/\t/); # $qValue is fdr_bh
-	    $amplitude = 0 if($amplitude eq 'NA'); # Don't think this is relevant for Arser.
+	    $amplitude = 0 if($amplitude eq 'NA');
 	    my $maxExp = max(\@expressions);
 	    my $minExp = min(\@expressions);
-	    my $medExp = median(\@expressions); 
-	    my $expDif = $maxExp-$minExp; 
+	    my $medExp = median(\@expressions);
+	    my $expDif = $maxExp-$minExp;
 	    push(@{$expDiffs},$expDif);
 	    my $rhythmScore = -log($pValue);
 	    $sigInfo{$id} = [$pValue,$amplitude,$expDif,$minExp,$medExp,$maxExp,$rhythmScore,$name];
@@ -132,22 +138,6 @@ sub median {
     my @array = sort {$a <=> $b} @{$array};
     return $array[int(@array/2)] if(@array % 2);
     return ($array[int(@array/2)-1] + $array[int(@array/2)])/2;
-}
-
-sub mean { # I don't even use this subroutine in this script.
-#    return sum(@_)/@_; # this only works when an actual array is passed, not an array reference.
-    my($array) = @_;
-    my $count = scalar(@{$array});
-    return sum($array)/$count;
-}
-
-sub sum {
-    my($array) = @_;
-    my $sum = 0;
-    foreach my $item (@{$array}) {
-        $sum += $item;
-    }
-    return $sum;
 }
 
 sub max {

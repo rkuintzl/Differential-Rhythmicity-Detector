@@ -1,9 +1,23 @@
 #!/usr/bin/perl -w
+
+# Add license
+
+# Created on [2015]
+#
+# Authors:
+# Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology
+# David A. Hendrix (David.Hendrix@oregonstate.edu), Oregon State University
+#
+# This script is one in a series of scripts for characterizing differential rhythmicity in
+# gene expression analysis as described in
+# Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
+#
+# Please use [./fitGaussian_DAH_script.pl -h] to see the help screen for further instructions on running this script.
+
 use Getopt::Long;
 use Histogram;
 use strict;
 $|=1;
-
 
 my $usage = "
 Usage:\n\n
@@ -37,7 +51,7 @@ GetOptions( 'infile=s' => \$data->{_in},
 	    'lower=f' => \$data->{_fitMin},
 	    'uppper=f' => \$data->{_fitMax},
 	    'floor' => \$data->{_lower},   # an lowerbound(filter) on what is read in.
-	    'max=f' => \$data->{_upper},   # an upperbound(filter) on what is read in.	    
+	    'max=f' => \$data->{_upper},   # an upperbound(filter) on what is read in.
  	    'help' => \$data->{_help},
 	    'raw' => \$data->{_raw},
 	    'Log' => \$data->{_logTransform},
