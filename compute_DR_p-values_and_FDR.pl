@@ -1,37 +1,53 @@
 #!/usr/bin/perl -w
+
+# Copyright 2016 Rachael Kuintzle
+
+# This file is part of the DRD script collection.
+
+#    DRD is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    DRD is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#    You should have received a copy of the GNU General Public License
+#    along with DRD.  If not, see <http://www.gnu.org/licenses/>.  
+
+# Author:
+# Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology                                                                                
+# This script is one in a series of scripts for characterizing differential rhythmicity in
+# gene expression analysis as described in:
+# Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
+
+
 use strict;
 use Math::CDF;
 
 $|=1;
 
-# This script scores rhythmicity in young and old as the suprisal, or the -log of the Arser p-value. 
-# Thus, rhythmicity fold changes are the difference of the suprisal. 
-# It calculates p-values from z-scores using Math::CDF
-# and adjust the p-value to produce q-values as the findAntiCorrelatedGenes script does.
+# This script scores rhythmicity in young and old as the -log of the Arser p-value. 
+# Thus, rhythmicity fold changes are the differences in -log(p-value) between two conditions. 
+# It calculates p-values from z-scores using the Perl module Math::CDF
+# and uses the Benjamini-Hochberg procedure to adjust the p-value and produce q-values.
 
-# This script does not pre-filter on fold change or p-value.
+my $usage = "Usage:\n$0 <DR score file> <FDR> <Gaussian mean> <Gaussian variance>\n";
 
-my $usage = "Usage:\n$0 <Arser LLC score file> <FDR> <mean> <stddev> <Arser p-value cutoff (old flies)> <max/min requirement (1.5)>\n";
+my $SDRfile = $ARGV[0] or die $usage; # Output file of compute_DR_scores.pl
+my $FDR = $ARGV[1] or die $usage; # Example: 0.05 for 5% false discovery rate (FDR)
+my $mean = $ARGV[2] or die $usage; # Reported by DR_scores_Gaussian_fit.pl in the output file with .fitParams suffix
+my $variance = $ARGV[3] or die $usage; # Reported by DR_scores_Gaussian_fit.pl in the output file with .fitParams suffix
+my $stdDev = sqrt($variance);
 
-my $LLCfile = $ARGV[0] or die $usage; # Created by ~/Scripts/parseArser_get_LLCscores_basedOnZscores, etc.
-my $FDR = $ARGV[1] or die $usage;
-# Determined from a normal fit to the 
-# LLC score distribution 
-# by Dave's script ~/Scripts/fitGaussian_DAH_script.pl
-my $mean = $ARGV[2] or die $usage; 
-my $stdDev = $ARGV[3] or die $usage; 
-my $cutoff = $ARGV[4] or die $usage;
-my $FCcutoff = $ARGV[5] or die $usage;
+my $LLC_outFile = 'LLC_stats_FDR'. $FDR . '_DRscore.Gaussian_mean' . $mean . '_stdDev' . $stdDev . '.txt';
 
-my $LLC_outFile = 'LLC_stats_FDR'. $FDR . '_ARS.Old_pValCutoff' . $cutoff . '_minFC' . $FCcutoff . '_mean' . $mean . '_stdDev' . $stdDev . '.txt';
-my $ELC_outFile = 'ELC_stats_FDR'. $FDR . '_ARS.Old_pValCutoff' . $cutoff . '_minFC' . $FCcutoff . '_mean' . $mean . '_stdDev' . $stdDev . '.txt';
-
-my($rhythmVals) = readLLCfile($LLCfile);
-my($LLCstats,$ELCstats) = getPVals($rhythmVals,$mean,$stdDev);
+my($rhythmVals) = readSDRfile($SDRfile);
+my($LLCstats,$ELCstats) = getPVals($rhythmVals,$mean,$stdDev); # ELC stats is not used in this version
 my($sigInfo_LLCs) = BH_test($LLCstats,$FDR);
-my($sigInfo_ELCs) = BH_test($ELCstats,$FDR);
-printLLCfile($sigInfo_LLCs,$FCcutoff,$cutoff,$LLC_outFile);
-printELCfile($sigInfo_ELCs,$FCcutoff,$cutoff,$ELC_outFile);
+printSDRinfo($sigInfo_LLCs,$LLC_outFile);
 
 sub getPVals {
     my($rhythmVals,$mean,$stdDev) = @_;
@@ -50,28 +66,13 @@ sub getPVals {
     return(\@sortedLLCstats,\@sortedELCstats);
 }
 
-sub printLLCfile {
-    my($sigInfo,$FCcutoff,$cutoff,$outFile) = @_;
+sub printSDRinfo {
+    my($sigInfo,$outFile) = @_;
     open(OUT,">$outFile") or die "Could not open $outFile for writing.\n";
-    print OUT "#GeneID\tSymbol\tArser Young p-value\tArser Old p-value\tZp (periodicity dif z-score)\tYoung Max-Min Exp\tOld Max-Min Exp\tZr (robustness dif z-score)\tLLC Score\tZ-score\tP-value\tQ-value\tSignificant?\tRank\tOld Exp FC\n";
+    print OUT "#GeneID\tSymbol\tARSER Young p-value\tARSER Old p-value\tZp (periodicity dif z-score)\tYoung Max-Min Exp\tOld Max-Min Exp\tZr (robustness dif z-score)\tLLC Score\tZ-score\tP-value\tQ-value\tSignificant?\tRank\tOld Exp FC\n";
     foreach my $gene (@{$sigInfo}) {
 	my($pValue,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$LLCscore,$sigStatus,$geneId,$name) = @{$gene};
-	if($oPval < $cutoff && $oExpFC >= $FCcutoff) { 
-	    print OUT "$geneId\t$name\t$yPval\t$oPval\t$normRhythmDif\t$yExpDif\t$oExpDif\t$normLogExpDifFC\t$LLCscore\t$zScore\t$pValue\t$qValue\t$sigStatus\t$rank\t$oExpFC\n";
-	}
-    }
-    close(OUT);
-}
-
-sub printELCfile {
-    my($sigInfo,$FCcutoff,$cutoff,$outFile) = @_;
-    open(OUT,">$outFile") or die "Could not open $outFile for writing.\n";
-    print OUT "#GeneID\tSymbol\tArser Young p-value\tArser Old p-value\tZp (periodicity dif z-score)\tYoung Max-Min Exp\tOld Max-Min Exp\tZr (robustness dif z-score)\tLLC Score\tZ-score\tP-value\tQ-value\tSignificant?\tRank\tOld Exp FC\n";
-    foreach my $gene (@{$sigInfo}) {
-        my($pValue,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$LLCscore,$sigStatus,$geneId,$name) = @{$gene};
-        if($yPval < $cutoff && $yExpFC >= $FCcutoff) {
-            print OUT "$geneId\t$name\t$yPval\t$oPval\t$normRhythmDif\t$yExpDif\t$oExpDif\t$normLogExpDifFC\t$LLCscore\t$zScore\t$pValue\t$qValue\t$sigStatus\t$rank\t$oExpFC\n";
-        }
+	print OUT "$geneId\t$name\t$yPval\t$oPval\t$normRhythmDif\t$yExpDif\t$oExpDif\t$normLogExpDifFC\t$LLCscore\t$zScore\t$pValue\t$qValue\t$sigStatus\t$rank\t$oExpFC\n";
     }
     close(OUT);
 }
@@ -93,7 +94,7 @@ sub BH_test {
 	my($p,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name) = @{$gene};
         $i++;
 	# q-tilde, not real q-value
-        my $q = ($p * $n)/$i;
+        my $q = ($p * $n)/$i; 
         if($p <= $FDR * ($i/$n)) {
 	    # $k will store largest rank that satistifies inequality
             $k = $i;
@@ -126,7 +127,7 @@ sub BH_test {
     return(\@sigInfo);
 }
 
-sub readLLCfile {
+sub readSDRfile {
     my($file) = @_;
     my %info;
     open(FILE,$file) or die "Could not open $file\n";

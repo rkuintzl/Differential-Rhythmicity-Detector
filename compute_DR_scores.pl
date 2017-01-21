@@ -1,42 +1,54 @@
 #!/usr/bin/perl -w
 
-# Created on [2015]
-#
-# Authors:
+# Copyright 2016 Rachael Kuintzle
+
+# This file is part of the DRD script collection.
+
+#    DRD is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    DRD is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+
+#    You should have received a copy of the GNU General Public License
+#    along with DRD.  If not, see <http://www.gnu.org/licenses/>.  
+
+# Author:
 # Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology
-# David A. Hendrix (David.Hendrix@oregonstate.edu), Oregon State University
-#
-# This script is one in a series of scripts for characterizing differential rhythmicity in
+
+# This script is one in a series of scripts for characterizing differential rhythmicity in:
 # gene expression analysis as described in
 # Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
 
 use strict;
-use Scalar::Util qw(looks_like_number);
 use Statistics::Basic;
 use Math::CDF;
 
 $|=1;
 
-# Restrictions:
-#     MEDIAN expression value >= 1 FPKM in young OR old.
+# Imposed restrictions:
+#     Median expression value >= 1 FPKM in young OR old.
 #     Young and old p-values cannot both be 1--these genes are excluded.
 #     Each gene must have at least one non-zero FPKM value in young AND old
 #     (to avoid using a pseudo-count when computing the fold change)
-
+#
 # Differential rhythmicity score (S_DR) is defined as: (Zp + Zr)/2,
 # where Zp is the periodicity difference z-score, and Zr is the robustness difference z-score.
 # For more details, see our publication referenced above.
-#
-# Please use [./fitGaussian_DAH_script.pl -h] to see the help screen for further instructions on running this script.
 
-my $usage = "Usage:\n$0 <ARS Cycle young output> <ARS Cycle old output>\n";
+
+my $usage = "Usage:\n$0 <ARSER young output> <ARSER old output>\n";
 
 my $youngFile = $ARGV[0] or die $usage;
 my $oldFile = $ARGV[1] or die $usage;
 
 my $minFpkm = 1; # This is a cutoff for median expression.
 
-my $outFile = 'Arser_oldVsYoung_SDR_scores_medianFpkmCutoff' . $minFpkm . '.txt';
+my $outFile = 'DR_scores_medianFpkmCutoff' . $minFpkm . '.txt';
 
 my($yVals,$oVals,$scores,$stats) = getRhythmInfo($youngFile,$oldFile);
 printRhythmInfo($yVals,$oVals,$scores,$stats);
@@ -52,7 +64,6 @@ sub getRhythmInfo {
     my($oVals,$expDiffs,$expressions) = readFile($oldFile,$expDiffs,$expressions);
     my $pseudoCount = nonZeroMin($expDiffs);
     my $expPsCount = nonZeroMin($expressions);
-    print "Genes with zero expression in young or old across all time points:\n";
     foreach my $id (keys %{$oVals}) { 
 	my($yPval,$yAmp,$yExpDif,$yMin,$yMed,$yMax,$yRhythmScore,$yName) = @{$yVals->{$id}};
         my($oPval,$oAmp,$oExpDif,$oMin,$oMed,$oMax,$oRhythmScore,$oName) = @{$oVals->{$id}};
@@ -68,8 +79,6 @@ sub getRhythmInfo {
 		    $scores{$id} = [$rhythmDif,$logExpDifFC,$yFC,$oFC];
 		    push(@rhythmDifs,$rhythmDif);
 		    push(@logExpDifFCs,$logExpDifFC);
-		} else {
-		    print "$yName\t$id\n";
 		}
 	    }
 	}

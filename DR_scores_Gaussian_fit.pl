@@ -1,18 +1,31 @@
 #!/usr/bin/perl -w
 
-# Add license
+# Copyright 2016 David Hendrix
 
-# Created on [2015]
+# This file is part of the DRD script collection.
+
+#    DRD is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    DRD is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
-# Authors:
-# Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology
+#    You should have received a copy of the GNU General Public License
+#    along with DRD.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+# Author:
 # David A. Hendrix (David.Hendrix@oregonstate.edu), Oregon State University
-#
+
 # This script is one in a series of scripts for characterizing differential rhythmicity in
 # gene expression analysis as described in
 # Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
-#
-# Please use [./fitGaussian_DAH_script.pl -h] to see the help screen for further instructions on running this script.
+
+# Please use DR_scores_Gaussian_fit.pl -h to see the help screen for further instructions on running this script.
 
 use Getopt::Long;
 use Histogram;
@@ -25,7 +38,7 @@ Usage:\n\n
         or\n
         cat infile | perl $0 [options]\n\n
 Options:\n
-        -i --infile      the input file of data points to analyze.\n
+        -i --infile      the input file of data points to analyze -- the output file produced by the script compute_DR_scores.pl.\n
         -o --out         output file base.\n
         -b --binsize     the size of bins for the histogram.\n
         -c --column      the column to evaluate the histogram of.\n
