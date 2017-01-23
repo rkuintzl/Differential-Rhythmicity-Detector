@@ -201,3 +201,19 @@ sub nonZeroMin {
     }
     return $min;
 }
+
+sub mean { 
+    my($array) = @_;
+    my $count = scalar(@{$array});
+    return sum($array)/$count;
+}
+
+sub sum {
+    my($array) = @_;
+    my $sum = 0;
+    foreach my $item (@{$array}) {
+        $sum += $item;
+    }
+    return $sum;
+}
+
