@@ -45,7 +45,7 @@ Usage:\n\n
 ";
 
 
-my $outBase = 'LLC_stats'
+my $outBase = 'LLC_stats';
 my $FDR = 0.05; # Example: 0.05 for 5% false discovery rate (FDR)
 my $mean = 0.0;
 my $variance = 1.0; 
