@@ -113,7 +113,7 @@ sub BH_test {
     my @sigInfo;
     my $i = 0;
     my $n = scalar(@{$pInfo});
-    print "Number of genes in set: $n\n";
+#    print "Number of genes in set: $n\n";
     my $k = 0;
     foreach my $gene (@{$pInfo}) {
 	my($p,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name) = @{$gene};
@@ -126,7 +126,6 @@ sub BH_test {
         }
         push(@rankInfo,[$p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name]); # where $i is rank of $p
     }
-    print "k = $k\n";
     my $N = @rankInfo;
     my @list;
     my %qValues;
