@@ -23,9 +23,9 @@
 # gene expression analysis as described in:
 # Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
 
-
-use strict;
+use Getopt::Long;
 use Math::CDF;
+use strict;
 
 $|=1;
 
@@ -34,15 +34,40 @@ $|=1;
 # It calculates p-values from z-scores using the Perl module Math::CDF
 # and uses the Benjamini-Hochberg procedure to adjust the p-value and produce q-values.
 
-my $usage = "Usage:\n$0 <DR score file> <FDR> <Gaussian mean> <Gaussian variance>\n";
+my $usage = "
+Usage:\n\n
+      $0 <DR score file> <Gaussian mean> <Gaussian variance> [options]\n\n
+      -f --fdr           a false discovery rate (FDR) for the BH correction (default=0.05)
+      -m --mean          a value for the mean of the Gaussian fit.
+      -v --variance      a value for the variance of the Gaussian fit. 
+      -o --outBase       a suffix for the output file (default=LLC_stats)
+      -h --help          print this help message
+";
+
+
+my $outBase = 'LLC_stats'
+my $FDR = 0.05; # Example: 0.05 for 5% false discovery rate (FDR)
+my $mean = 0.0;
+my $variance = 1.0; 
+my $help = 0;
 
 my $SDRfile = $ARGV[0] or die $usage; # Output file of compute_DR_scores.pl
-my $FDR = $ARGV[1] or die $usage; # Example: 0.05 for 5% false discovery rate (FDR)
-my $mean = $ARGV[2] or die $usage; # Reported by DR_scores_Gaussian_fit.pl in the output file with .fitParams suffix
-my $variance = $ARGV[3] or die $usage; # Reported by DR_scores_Gaussian_fit.pl in the output file with .fitParams suffix
-my $stdDev = sqrt($variance);
 
-my $LLC_outFile = 'LLC_stats_FDR'. $FDR . '_DRscore.Gaussian_mean' . $mean . '_stdDev' . $stdDev . '.txt';
+Getopt::Long::Configure("no_ignore_case");
+# read in the options
+GetOptions( 'fdr=f' => \$FDR,
+	    'mean' => \$mean,
+	    'variance' => \$variance,
+	    'outBase=s' => \$outBase,
+ 	    'help' => \$help
+    );
+
+if($help) {
+    die $usage;
+}
+
+my $stdDev = sqrt($variance);
+my $LLC_outFile = $outBase . '_FDR' . $FDR . '_mean' . $mean . '_stdDev' . $stdDev . '.txt';
 
 my($rhythmVals) = readSDRfile($SDRfile);
 my($LLCstats,$ELCstats) = getPVals($rhythmVals,$mean,$stdDev); # ELC stats is not used in this version
