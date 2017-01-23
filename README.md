@@ -22,7 +22,6 @@ DRD is composed of 3 Perl scripts:
 To get help on each script, you can type :
 
         compute_DR_scores.pl --help
-        [DAVE, MY SCRIPTS DON'T YET HAVE HELP FUNCTION]
 
 ## Input files
 
@@ -39,7 +38,6 @@ The following software and libraries must be installed on your machine:
  * [Math::CDF](http://search.cpan.org/~callahan/Math-CDF-0.1/CDF.pm)  :
  * [Statistics::Basic](http://search.cpan.org/~jettero/Statistics-Basic-1.6611/lib/Statistics/Basic.pod)
  * [Getopt::Long](http://search.cpan.org/~jv/Getopt-Long-2.49.1/lib/Getopt/Long.pm)
- * [Histogram]()  :  DAVE--NOT SURE WHAT TO LINK
 
 Additionally, the input files with rhythmicity parameters for each gene are modified slightly from those produced by the R implementation of ARSER, as described above. Consult the [MetaCycle manual](https://cran.r-project.org/web/packages/MetaCycle/MetaCycle.pdf) for information on its installation and dependencies.
 
@@ -49,7 +47,7 @@ To run these scripts, you need only to download the Perl files and execute them 
 
 ### compute_DR_scores.pl
 
-perl ./compute_DR_scores.pl <ARSER output for condition 1> <ARSER output for condition 2>
+perl ./compute_DR_scores.pl <ARSER output for condition 1> <ARSER output for condition 2> [options]
 
 Example usage:
 perl ./compute_DR_scores.pl namesAdded_young_dm6_genes_ARSER_result.txt namesAdded_old_dm6_genes_ARSER_result.txt
@@ -63,13 +61,16 @@ perl ./DR_scores_Gaussian_fit.pl -i <output file from compute_DR_scores.pl> -b <
 Example usage:
 perl ./DR_scores_Gaussian_fit.pl -i DR_scores_medianFpkmCutoff1.txt -b 0.1 -o DR_scores_binSize0.1 -c 11 -R
 
-Output: DAVE, which file suffix is the right one--.fitParams?
+
+Note that this script uses the Histogram.pm module that is also provided. It should work if in the same directory as the script, otherwise, put it into your PERL5LIB path. Using the mean and variance from the *.fitParams file, you input this into the next step
 
 ### compute_DR_p-values_and_FDR.pl
 
-perl ./compute_DR_p-values_and_FDR.pl <output file from compute_DR_scores.pl> <FDR> <DR mean (Gaussian)> <DR variance (Gaussian)>
+perl ./compute_DR_p-values_and_FDR.pl <output file from compute_DR_scores.pl> <DR mean (Gaussian)> <DR variance (Gaussian)> [options]
 
-Note: The mean and variance parameters are reported by the script from step 2: DR_scores_Gaussian_fit.pl
+Note: The mean and variance parameters are reported by the script from step 2: DR_scores_Gaussian_fit.pl, as part of the *.fitParams file. 
 
 Example usage:
-perl ./compute_DR_p-values_and_FDR.pl DR_scores_medianFpkmCutoff1.txt .05 -0.0270973 0.859165
+perl ./compute_DR_p-values_and_FDR.pl DR_scores_medianFpkmCutoff1.txt -0.0270973 0.859165 -f 0.01
+
+will change the FDR to 0.01. The default FDR is 0.05 when no -f flag is provided.
