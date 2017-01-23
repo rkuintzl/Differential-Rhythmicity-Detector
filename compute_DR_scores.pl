@@ -25,9 +25,9 @@
 # Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
 
 use strict;
+use Getopt::Long;
 use Statistics::Basic;
 use Math::CDF;
-
 $|=1;
 
 # Imposed restrictions:
@@ -41,14 +41,32 @@ $|=1;
 # For more details, see our publication referenced above.
 
 
-my $usage = "Usage:\n$0 <ARSER young output> <ARSER old output>\n";
+my $usage = "
+Usage:\n\n
+      $0 <ARSER young output> <ARSER old output> [options]\n\n
+      -m --minFpkm       a cutoff for the median expression (default=1).
+      -o --outBase       a suffix for the output file (default=DR_scores_medianFpkmCutoff)
+      -h --help          print this help message
+";
 
 my $youngFile = $ARGV[0] or die $usage;
 my $oldFile = $ARGV[1] or die $usage;
-
 my $minFpkm = 1; # This is a cutoff for median expression.
+my $outBase = 'DR_scores_medianFpkmCutoff';
+my $help = 0;
 
-my $outFile = 'DR_scores_medianFpkmCutoff' . $minFpkm . '.txt';
+Getopt::Long::Configure("no_ignore_case");
+# read in the options
+GetOptions( 'minFpkm=f' => \$minFpkm,
+	    'outBase=s' => \$outBase,
+ 	    'help' => \$help
+    );
+
+if($help) {
+    die $usage;
+}
+
+my $outFile = $outBase . $minFpkm . '.txt';
 
 my($yVals,$oVals,$scores,$stats) = getRhythmInfo($youngFile,$oldFile);
 printRhythmInfo($yVals,$oVals,$scores,$stats);
