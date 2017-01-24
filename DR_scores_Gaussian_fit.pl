@@ -34,31 +34,27 @@ $|=1;
 
 my $usage = "
 Usage:\n\n
-        $0 -i <infile> [options]\n
-        or\n
-        cat infile | perl $0 [options]\n\n
+        $0 -i <DR scores file> [options]\n
+
 Options:\n
         -i --infile      the input file of data points to analyze -- the output file produced by the script compute_DR_scores.pl.\n
         -o --out         output file base.\n
-        -b --binsize     the size of bins for the histogram.\n
-        -c --column      the column to evaluate the histogram of.\n
+        -b --binsize     the size of bins for the histogram. (default=0.1)\n
         -l --lower       a lower bound on the fitting.
         -u --upper       an upper bound on the fitting.
-        -m --max         an upper-bound on what is read in. filter out data greater than max.\n
-        -r --raw         print the raw (not normalized) histogram. [1=true,0=false=default]\n
-        -L --Log         log transform the input data. [1=true,0=false=default]\n
-        -R --Randomize   randomize the initial value for the mean in the fit.
-        -C --Cummulative print the cummulative distribution instead of histogram\n
-        -p --pseudocount pseudo count to add when taking log-scale\n\n";
-
+        -m --max         an upper-bound on what is read in. filter out data greater than max.\n\n";
 
 my $data = new Histogram;
+
+# set defaults
+$data->col(11);
+$data->bin(0.1);
+$data->randomize(1)
 
 Getopt::Long::Configure("no_ignore_case");
 # read in the options
 GetOptions( 'infile=s' => \$data->{_in},
 	    'out=s' => \$data->{_out},
-	    'column=i' => \$data->{_col},
 	    'binsize=f' => \$data->{_bin},
 	    'pseudocount=f' => \$data->{_pseudoCount},
 	    'lower=f' => \$data->{_fitMin},
