@@ -36,7 +36,7 @@ $|=1;
 
 my $usage = "
 Usage:\n\n
-      $0 <DR score file> <Gaussian mean> <Gaussian variance> [options]\n\n
+      $0 <DR score file> [options]\n\n
       -f --fdr           a false discovery rate (FDR) for the BH correction (default=0.05)
       -m --mean          a value for the mean of the Gaussian fit.
       -v --variance      a value for the variance of the Gaussian fit. 
@@ -56,8 +56,8 @@ my $SDRfile = $ARGV[0] or die $usage; # Output file of compute_DR_scores.pl
 Getopt::Long::Configure("no_ignore_case");
 # read in the options
 GetOptions( 'fdr=f' => \$FDR,
-	    'mean' => \$mean,
-	    'variance' => \$variance,
+	    'mean=f' => \$mean,
+	    'variance=f' => \$variance,
 	    'outBase=s' => \$outBase,
  	    'help' => \$help
     );
