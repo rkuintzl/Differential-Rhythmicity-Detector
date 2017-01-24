@@ -52,7 +52,7 @@ Usage:\n\n
 my $youngFile = $ARGV[0] or die $usage;
 my $oldFile = $ARGV[1] or die $usage;
 my $minFpkm = 1; # This is a cutoff for median expression.
-my $outBase = 'DR_scores_medianFpkmCutoff';
+my $outBase = "";
 my $help = 0;
 
 Getopt::Long::Configure("no_ignore_case");
@@ -66,7 +66,8 @@ if($help) {
     die $usage;
 }
 
-my $outFile = $outBase . $minFpkm . '.txt';
+my $outFile = "DR_scores_medianFpkmCutoff" . $minFpkm . '.txt';
+$outFile = $outBase . "_" . $outFile if($outBase);
 
 my($yVals,$oVals,$scores,$stats) = getRhythmInfo($youngFile,$oldFile);
 printRhythmInfo($yVals,$oVals,$scores,$stats);
@@ -78,8 +79,10 @@ sub getRhythmInfo {
     my @logExpDifFCs;
     my $expDiffs = [];
     my $expressions = [];
-    my($yVals,$expDiffs,$expressions) = readFile($youngFile,$expDiffs,$expressions);
-    my($oVals,$expDiffs,$expressions) = readFile($oldFile,$expDiffs,$expressions);
+    my $yVals = {};
+    my $oVals = {};
+    ($yVals,$expDiffs,$expressions) = readFile($youngFile,$expDiffs,$expressions);
+    ($oVals,$expDiffs,$expressions) = readFile($oldFile,$expDiffs,$expressions);
     my $pseudoCount = nonZeroMin($expDiffs);
     my $expPsCount = nonZeroMin($expressions);
     foreach my $id (keys %{$oVals}) { 
