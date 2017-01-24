@@ -87,13 +87,7 @@ if($data->in()) {
 	}
     }
 } else {
-    while(<STDIN>) {
-	unless(/^\#/) {
-	    chomp;
-	    my @row = split;
-	    $data->tally($row[$data->{_col}-1]);
-	}
-    }
+    die $usage;
 }
 my $histoFile = $data->printHistogram();
 my $fitParams = $data->fitGaussianDistribution($histoFile);
