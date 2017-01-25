@@ -49,7 +49,7 @@ my $data = new Histogram;
 # set defaults
 $data->col(11);
 $data->bin(0.1);
-$data->randomize(1)
+$data->randomize(1);
 
 Getopt::Long::Configure("no_ignore_case");
 # read in the options
