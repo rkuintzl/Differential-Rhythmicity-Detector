@@ -64,12 +64,12 @@ The output file produced by this script will be used in subsequent scripts in th
 
 ### DR_scores_Gaussian_fit.pl
 
-perl ./DR_scores_Gaussian_fit.pl -i <output file from compute_DR_scores.pl> -b <bin size> -o <outfile prefix> -c <column in text file to use for histogram building> -R
+perl ./DR_scores_Gaussian_fit.pl -i <output file from compute_DR_scores.pl> -b <bin size> -o <outfile prefix>
 
 Example usage:
 perl ./DR_scores_Gaussian_fit.pl -i DR_scores_medianFpkmCutoff1.txt -o DR_scores_binSize0.1 
 
-Note that this script uses the Histogram.pm module that is also provided. It should work if kept in the same directory as the script; otherwise, put it into your PERL5LIB path. 
+In this example, the default bin size is used (0.1) so not specified in the command line. Note that this script uses the Histogram.pm module that is also provided. It should work if kept in the same directory as the script; otherwise, put it into your PERL5LIB path.
 
 Output: Consider primarily the *.fitParams file, which reports the Gaussian mean and variance needed to run the third and final script. There are also histogram files produced, as well as information on the Gaussian fit. 
 
