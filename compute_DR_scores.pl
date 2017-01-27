@@ -27,7 +27,6 @@
 use strict;
 use Getopt::Long;
 use Statistics::Basic;
-use Math::CDF;
 $|=1;
 
 # Imposed restrictions:
