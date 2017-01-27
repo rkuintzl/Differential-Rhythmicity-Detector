@@ -5,7 +5,7 @@ Authors:
 Rachael C. Kuintzle (rkuintzl@caltech.edu), California Institute of Technology
 David A. Hendrix (David.Hendrix@oregonstate.edu), Oregon State University
 
-This document is intended to give a minimal description of the DRD pipeline, a collection of Perl scripts used to identify genes with differential rhythmicity based on round-the-clock RNA expression data from two different conditions (in this case, young and old age), as described in:
+This document is intended to give a minimal description of the DRD pipeline, a collection of Perl scripts used to identify genes with differential rhythmicity based on round-the-clock RNA expression data from two different conditions (in this case, young and old age), as described in:   
 Kuintzle, R. C. et al. Circadian deep sequencing reveals stress-response genes that adopt robust rhythmic expression during aging. Nat. Commun. 8, 14529 doi: 10.1038/ncomms14529 (2017).
 
 We are sharing this code in the spirit of experimental transparency and open science.
@@ -29,7 +29,7 @@ To get help on each script, you can type :
 
 ## Input files
 
-The input files used in our first script are modified versions of the output file produced by the R implementation of ARSER. ARSER generates tab-delimited text files with user-provided, unique gene or transcript IDs as the first column. To prepare an ARSER output file for use in our DRD pipeline, merely add a column containing unique gene symbols to the beginning of the file. Alternatively, you can simply duplicate the ID column if you do not wish to provide gene symbols.
+The input files used in our first script are modified versions of the output file produced by the R implementation of ARSER. ARSER generates tab-delimited text files with user-provided, unique gene or transcript IDs as the first column. To prepare an ARSER output file for use in our DRD pipeline, merely add a column containing unique gene symbols to the beginning of the file. Alternatively, you can simply duplicate the ID column if you do not wish to provide gene symbols.   
 
 [MetaCycle](https://cran.r-project.org/web/packages/MetaCycle/MetaCycle.pdf) contains the R implementation of the program [ARSER](https://github.com/cauyrd/ARSER). The function, called "meta2d", is available as part of the R library "MetaCycle". When this function is executed, "ARS" should be specified as the parameter "cycMethod".
 
@@ -54,7 +54,7 @@ To run these scripts, you need only to download the Perl files and execute them 
 
 ### compute_DR_scores.pl
 
-perl ./compute_DR_scores.pl <ARSER output for condition 1> <ARSER output for condition 2> [options]
+perl ./compute_DR_scores.pl \<ARSER output for condition 1> \<ARSER output for condition 2> [options]
 
 Example usage:
 perl ./compute_DR_scores.pl namesAdded_young_dm6_genes_ARSER_result.txt namesAdded_old_dm6_genes_ARSER_result.txt -m 1
@@ -64,7 +64,7 @@ The output file produced by this script will be used in subsequent scripts in th
 
 ### DR_scores_Gaussian_fit.pl
 
-perl ./DR_scores_Gaussian_fit.pl -i <output file from compute_DR_scores.pl> -b <bin size> -o <outfile prefix>
+perl ./DR_scores_Gaussian_fit.pl -i \<output file from compute_DR_scores.pl> -b \<bin size> -o \<outfile prefix>
 
 Example usage:
 perl ./DR_scores_Gaussian_fit.pl -i DR_scores_medianFpkmCutoff1.txt -o DR_scores_binSize0.1 
@@ -76,7 +76,7 @@ Output: Consider primarily the *.fitParams file, which reports the Gaussian mean
 
 ### compute_DR_p-values_and_FDR.pl
 
-perl ./compute_DR_p-values_and_FDR.pl <output file from compute_DR_scores.pl> -m <DR mean (Gaussian)> -v <DR variance (Gaussian)> [options]
+perl ./compute_DR_p-values_and_FDR.pl \<output file from compute_DR_scores.pl> -m \<DR mean (Gaussian)> -v \<DR variance (Gaussian)> [options]
 
 Note: The mean and variance parameters are reported by the script from step 2 (DR_scores_Gaussian_fit.pl), as part of the *.fitParams file. 
 
