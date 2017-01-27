@@ -39,8 +39,8 @@ The input files used in our first script are modified versions of the output fil
 
 The following software and libraries must be installed on your machine:
 
-- [Perl5+](https://www.perl.org/) : tested with version [5.18.2] DAVE?
- * [Math::CDF](http://search.cpan.org/~callahan/Math-CDF-0.1/CDF.pm)  :
+- [Perl5+](https://www.perl.org/) : tested with version 5.16.3
+ * [Math::CDF](http://search.cpan.org/~callahan/Math-CDF-0.1/CDF.pm)
  * [Statistics::Basic](http://search.cpan.org/~jettero/Statistics-Basic-1.6611/lib/Statistics/Basic.pod)
  * [Getopt::Long](http://search.cpan.org/~jv/Getopt-Long-2.49.1/lib/Getopt/Long.pm)
 
@@ -78,7 +78,7 @@ Output: Consider primarily the *.fitParams file, which reports the Gaussian mean
 
 perl ./compute_DR_p-values_and_FDR.pl <output file from compute_DR_scores.pl> -m <DR mean (Gaussian)> -v <DR variance (Gaussian)> [options]
 
-Note: The mean and variance parameters are reported by the script from step 2: DR_scores_Gaussian_fit.pl, as part of the *.fitParams file. 
+Note: The mean and variance parameters are reported by the script from step 2 (DR_scores_Gaussian_fit.pl), as part of the *.fitParams file. 
 
 Example usage:
 perl ./compute_DR_p-values_and_FDR.pl DR_scores_medianFpkmCutoff1.txt -m -0.0270973 -v 0.859165 -f 0.01

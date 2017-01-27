@@ -77,13 +77,11 @@ sub getRhythmInfo {
     my %scores;
     my @rhythmDifs;
     my @logExpDifFCs;
-    my $expDiffs = [];
     my $expressions = [];
     my $yVals = {};
     my $oVals = {};
-    ($yVals,$expDiffs,$expressions) = readFile($youngFile,$expDiffs,$expressions);
-    ($oVals,$expDiffs,$expressions) = readFile($oldFile,$expDiffs,$expressions);
-    my $pseudoCount = nonZeroMin($expDiffs);
+    ($yVals,$expressions) = readFile($youngFile,$expressions);
+    ($oVals,$expressions) = readFile($oldFile,$expressions);
     my $expPsCount = nonZeroMin($expressions);
     foreach my $id (keys %{$oVals}) { 
 	my($yPval,$yAmp,$yExpDif,$yMin,$yMed,$yMax,$yRhythmScore,$yName) = @{$yVals->{$id}};
@@ -139,7 +137,7 @@ sub printRhythmInfo {
 }
 
 sub readFile {
-    my($file,$expDiffs,$expVals) = @_;
+    my($file,$expVals) = @_;
     my %sigInfo;
     open(FILE,$file) or die "Could not open $file\n";
     while(<FILE>) {
@@ -154,13 +152,12 @@ sub readFile {
 	    my $minExp = min(\@expressions);
 	    my $medExp = median(\@expressions);
 	    my $expDif = $maxExp-$minExp;
-	    push(@{$expDiffs},$expDif);
 	    my $rhythmScore = -log($pValue);
 	    $sigInfo{$id} = [$pValue,$amplitude,$expDif,$minExp,$medExp,$maxExp,$rhythmScore,$name];
 	}
     }
     close(FILE);
-    return(\%sigInfo,$expDiffs,$expVals);
+    return(\%sigInfo,$expVals);
 }
 
 sub median {

@@ -79,12 +79,12 @@ sub getPVals {
     my @LLCstats;
     my @ELCstats;
     foreach my $geneId (keys %{$rhythmVals}) {
-	my($name,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore) = @{$rhythmVals->{$geneId}};
-	my $zScore = ($LLCscore - $mean)/$stdDev;
+	my($name,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score) = @{$rhythmVals->{$geneId}};
+	my $zScore = ($DR_score - $mean)/$stdDev;
 	my $LLCpVal = computePValue($zScore);
 	my $ELCpVal = 1-$LLCpVal;
-	push(@LLCstats,[$LLCpVal,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name]);
-	push(@ELCstats,[$ELCpVal,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name]);
+	push(@LLCstats,[$LLCpVal,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name]);
+	push(@ELCstats,[$ELCpVal,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name]);
     }
     my @sortedLLCstats = sort {$a->[0] <=> $b->[0]} @LLCstats;
     my @sortedELCstats = sort {$a->[0] <=> $b->[0]} @ELCstats;
@@ -94,10 +94,10 @@ sub getPVals {
 sub printSDRinfo {
     my($sigInfo,$outFile) = @_;
     open(OUT,">$outFile") or die "Could not open $outFile for writing.\n";
-    print OUT "#GeneID\tSymbol\tARSER Young p-value\tARSER Old p-value\tZp (periodicity dif z-score)\tYoung Max-Min Exp\tOld Max-Min Exp\tZr (robustness dif z-score)\tLLC Score\tZ-score\tP-value\tQ-value\tSignificant?\tRank\tOld Exp FC\n";
+    print OUT "#GeneID\tSymbol\tARSER Young p-value\tARSER Old p-value\tZp (periodicity dif z-score)\tYoung Max-Min Exp\tOld Max-Min Exp\tZr (robustness dif z-score)\tDR Score\tZ-score\tP-value\tQ-value\tSignificant?\tRank\tOld Exp FC\n";
     foreach my $gene (@{$sigInfo}) {
-	my($pValue,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$LLCscore,$sigStatus,$geneId,$name) = @{$gene};
-	print OUT "$geneId\t$name\t$yPval\t$oPval\t$normRhythmDif\t$yExpDif\t$oExpDif\t$normLogExpDifFC\t$LLCscore\t$zScore\t$pValue\t$qValue\t$sigStatus\t$rank\t$oExpFC\n";
+	my($pValue,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$DR_score,$sigStatus,$geneId,$name) = @{$gene};
+	print OUT "$geneId\t$name\t$yPval\t$oPval\t$normRhythmDif\t$yExpDif\t$oExpDif\t$normLogExpDifFC\t$DR_score\t$zScore\t$pValue\t$qValue\t$sigStatus\t$rank\t$oExpFC\n";
     }
     close(OUT);
 }
@@ -116,7 +116,7 @@ sub BH_test {
 #    print "Number of genes in set: $n\n";
     my $k = 0;
     foreach my $gene (@{$pInfo}) {
-	my($p,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name) = @{$gene};
+	my($p,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name) = @{$gene};
         $i++;
 	# q-tilde, not real q-value
         my $q = ($p * $n)/$i; 
@@ -124,19 +124,19 @@ sub BH_test {
 	    # $k will store largest rank that satistifies inequality
             $k = $i;
         }
-        push(@rankInfo,[$p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name]); # where $i is rank of $p
+        push(@rankInfo,[$p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name]); # where $i is rank of $p
     }
     my $N = @rankInfo;
     my @list;
     my %qValues;
     for(my $r=$N-1; $r>=0; $r--) {
-        my($p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name) = @{$rankInfo[$r]};
+        my($p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name) = @{$rankInfo[$r]};
         push(@list,$q);
         @list = sort {$a <=> $b} @list;
         $qValues{$geneId} = $list[0];
     }
     foreach my $gene (@rankInfo) {
-        my($p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore,$geneId,$name) = @{$gene};
+        my($p,$i,$q,$zScore,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score,$geneId,$name) = @{$gene};
         my $sigStatus;
         if($i <= $k) {
             $sigStatus = 'yes';
@@ -146,7 +146,7 @@ sub BH_test {
 	# the real q-value
         my $qValue = $qValues{$geneId};
 	my $rank = $i;
-        push(@sigInfo,[$p,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$LLCscore,$sigStatus,$geneId,$name]);
+        push(@sigInfo,[$p,$rank,$qValue,$zScore,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$yExpFC,$oExpFC,$DR_score,$sigStatus,$geneId,$name]);
     }
     return(\@sigInfo);
 }
@@ -158,8 +158,8 @@ sub readSDRfile {
     while(<FILE>) {
         chomp;
 	unless(/^\#/) {
-	    my($id,$name,$yExpFC,$oExpFC,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore) = split(/\t/);
-	    $info{$id} = [$name,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$LLCscore];
+	    my($id,$name,$yExpFC,$oExpFC,$yPval,$oPval,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score) = split(/\t/);
+	    $info{$id} = [$name,$yPval,$oPval,$yExpFC,$oExpFC,$normRhythmDif,$yExpDif,$oExpDif,$normLogExpDifFC,$DR_score];
 	}
     }
     close(FILE);
